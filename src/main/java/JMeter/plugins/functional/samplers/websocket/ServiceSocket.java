@@ -119,6 +119,10 @@ public class ServiceSocket {
         return responseMessage;
     }
 
+    public void clearBacklog() {
+        responeBacklog.clear();
+    }
+
     public boolean awaitClose(int duration, TimeUnit unit) throws InterruptedException {
         logMessage.append(" - Waiting for messages for ").append(duration).append(" ").append(unit.toString()).append("\n");
         boolean res = this.closeLatch.await(duration, unit);
@@ -228,13 +232,18 @@ public class ServiceSocket {
         return connected;
     }
 
-    public void initialize() {
+    public void initialize(WebSocketSampler _parent) {
         logMessage = new StringBuffer();
         logMessage.append("\n\n[Execution Flow]\n");
         logMessage.append(" - Reusing exising connection\n");
         error = 0;
 
         this.closeLatch = new CountDownLatch(1);
+
+		this.responsePattern = new CompoundVariable(_parent.getResponsePattern()).execute();
+		this.disconnectPattern = new CompoundVariable(_parent.getCloseConncectionPattern()).execute();
+		initializePatterns();
+
     }
 
     private void addResponseMessage(String message) {
